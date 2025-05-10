@@ -160,7 +160,9 @@ cat ts.log.accumulated |
 	esac
 done
 
-sysctl -n debug.tslog_user | perl $SRCDIR/tslog-user.pl
+TSLOG_USER=debug.tslog_user
+sysctl -n $TSLOG_USER | grep -q '^[0-9]' && \
+	sysctl -n $TSLOG_USER | perl $SRCDIR/tslog-user.pl
 
 cat threads |
     lam -s "tslog.thread." - |
