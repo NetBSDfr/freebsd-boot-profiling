@@ -126,6 +126,7 @@ my $searchcolor = "rgb(230,0,230)";	# color for search highlighting
 my $notestext = "";		# embedded notes in SVG
 my $subtitletext = "";		# second level title (optional)
 my $flamechart = 0;		# produce a flame chart (don't sort or merge)
+my $freq = 0;
 my $help = 0;
 
 sub usage {
@@ -150,6 +151,7 @@ USAGE: $0 [options] infile > outfile.svg\n
 	--negate         # switch differential hues (blue<->red)
 	--notes TEXT     # add notes comment in SVG (for debugging)
 	--flamechart     # produce a flame chart (don't sort or merge stacks)
+	--freq           # frequency
 	--help           # this message
 
 	eg,
@@ -181,6 +183,7 @@ GetOptions(
 	'notes=s'     => \$notestext,
 	'flamechart'  => \$flamechart,
 	'help'        => \$help,
+	'freq=s'      => \$freq,
 ) or usage();
 $help && usage();
 
@@ -1081,8 +1084,9 @@ while (my ($id, $node) = each %Node) {
 		=~ s/(^[-+]?\d+?(?=(?>(?:\d{3})+)(?!\d))|\G\d{3}(?=\d))/$1,/g;
 
 	my $info;
+	my $duration = sprintf "%.2f", (($etime - $stime) * 1000) / $freq;
 	if ($func eq "" and $depth == 0) {
-		$info = "all ($samples_txt $countname, 100%)";
+		$info = "all ($samples_txt $countname, 100%, ${duration}ms)";
 	} else {
 		my $pct = sprintf "%.2f", ((100 * $samples) / ($timemax * $factor));
 		my $escaped_func = $func;
@@ -1093,12 +1097,12 @@ while (my ($id, $node) = each %Node) {
 		$escaped_func =~ s/"/&quot;/g;
 		$escaped_func =~ s/_\[[kwij]\]$//;	# strip any annotation
 		unless (defined $delta) {
-			$info = "$escaped_func ($samples_txt $countname, $pct%)";
+			$info = "$escaped_func ($samples_txt $countname, $pct%, ${duration}ms)";
 		} else {
 			my $d = $negate ? -$delta : $delta;
 			my $deltapct = sprintf "%.2f", ((100 * $d) / ($timemax * $factor));
 			$deltapct = $d > 0 ? "+$deltapct" : $deltapct;
-			$info = "$escaped_func ($samples_txt $countname, $pct%; $deltapct%)";
+			$info = "$escaped_func ($samples_txt $countname, $pct%, ${duration}ms; $deltapct%)";
 		}
 	}
 
